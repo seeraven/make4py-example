@@ -14,16 +14,23 @@
 # ----------------------------------------------------------------------------
 APP_NAME             := make4py-example
 APP_VERSION          := 0.0.1
-UBUNTU_DIST_VERSIONS := 18.04 20.04 22.04
 
-# To use our own pylintrc file, we simply set the variables befor including make4py:
-PYLINT_RCFILE        := $(CURDIR)/.pylintrc
+ALL_TARGET           := check-style.venv
+SCRIPT               := src/example_app.py
 
 
 # ----------------------------------------------------------------------------
 #  MAKE4PY INTEGRATION
 # ----------------------------------------------------------------------------
 include .make4py/make4py.mk
+
+
+# ----------------------------------------------------------------------------
+#  OWN TARGETS
+# ----------------------------------------------------------------------------
+.PHONY: precheck-releases
+
+precheck-releases: check-style.all tests.all doc man
 
 
 # ----------------------------------------------------------------------------
