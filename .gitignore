@@ -133,3 +133,4 @@ dmypy.json
 .vagrant/
 *~
 venv_*/
+doc/source/apidoc/
