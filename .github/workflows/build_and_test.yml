@@ -1,0 +1,73 @@
+name: Build and Test
+
+on: push
+
+jobs:
+  build_on_ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - name: Restore modification times of git checkout
+      run: |
+        .github/helpers/git-restore-mtime
+        .github/helpers/git-restore-mtime --cwd $PWD/.make4py
+    - name: Restore .dockerstamps
+      id: cache-dockerstamps
+      uses: actions/cache@v3
+      with:
+        path: .dockerstamps
+        key: cache-dockerstamps
+    - name: Remove .dockerstamps older than 30 days
+      run: find .dockerstamps -type f -mtime +30 -delete
+    - name: Restore docker images
+      id: cache-docker-images
+      uses: actions/cache@v3
+      with:
+        path: ci/cache/docker
+        key: cache-docker-images
+    - name: Import docker images if available
+      if: steps.cache-docker-images.outputs.cache-hit == 'true'
+      run: |
+        docker image load --input ./ci/cache/docker/ubuntu18.04.tar
+        docker image load --input ./ci/cache/docker/ubuntu20.04.tar
+        docker image load --input ./ci/cache/docker/ubuntu22.04.tar
+    - name: Print help
+      run: make help
+    - name: Check style in Ubuntu docker images
+      run: make check-style.ubuntu
+    - name: Generate documentation and man-page
+      run: make doc.ubuntu22.04 man.ubuntu22.04
+    - name: Tests in Ubuntu docker images
+      run: make tests.ubuntu
+    - name: Build Ubuntu Releases
+      run: make releases ENABLE_WINDOWS_SUPPORT=0
+    - name: Test Ubuntu Releases
+      run: make test-releases ENABLE_WINDOWS_SUPPORT=0
+    - name: Export docker images
+      run: |
+        mkdir -p ./ci/cache/docker
+        docker image save make4py:ubuntu18.04 --output ./ci/cache/docker/ubuntu18.04.tar
+        docker image save make4py:ubuntu20.04 --output ./ci/cache/docker/ubuntu20.04.tar
+        docker image save make4py:ubuntu22.04 --output ./ci/cache/docker/ubuntu22.04.tar
+
+  build_on_windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: true
+    - name: Print help
+      run: make help
+    - name: Print extended help
+      run: make help-all
+    - name: Check style
+      run: make check-style.venv SHELL=cmd
+    - name: Run Unittests
+      run: make unittests.venv SHELL=cmd
+    - name: Build Windows Release
+      run: make releases SHELL=cmd
+    - name: Test Windows Release
+      run: make test-releases SHELL=cmd
