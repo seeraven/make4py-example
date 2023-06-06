@@ -21,7 +21,8 @@ jobs:
         path: .dockerstamps
         key: cache-dockerstamps
     - name: Remove .dockerstamps older than 30 days
-      run: find .dockerstamps -type f -mtime +30 -delete
+      if: steps.cache-dockerstamps.outputs.cache-hit == 'true'
+      run: find .dockerstamps -type f -mtime +30 -delete || true
     - name: Restore docker images
       id: cache-docker-images
       uses: actions/cache@v3
