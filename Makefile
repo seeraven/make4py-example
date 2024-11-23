@@ -15,6 +15,8 @@
 APP_NAME             := make4py-example
 APP_VERSION          := 0.0.1
 
+ALPINE_DIST_VERSIONS := 3.20
+
 ALL_TARGET           := check-style.venv
 SCRIPT               := src/example_app.py
 
